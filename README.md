@@ -1,210 +1,402 @@
 # Data Quality & Canonical Metrics Platform with AI Analytics Assistant
 
-An end-to-end analytics engineering platform that transforms operational data into trusted canonical metrics through automated data-quality validation, quarantine, remediation, analytics modeling, and BI reporting.
+> A production-style analytics engineering platform that transforms operational data into trusted canonical metrics through automated data-quality validation, quarantine, remediation, orchestration, and BI reporting — with an AI assistant for governed natural-language analytics.
 
-The platform also includes an AI Analytics Assistant that converts natural-language business questions into governed, read-only SQL and explains query results for business users.
+![Platform Architecture](screenshots/Platform_architecture.png)
 
-## Project Overview
+## Overview
 
-Operational analytics often requires more than simply loading data into a warehouse.
+Modern analytics systems are only as reliable as the data and metric definitions behind them.
 
-Data must be:
+This project demonstrates an end-to-end analytics engineering workflow for operational trip and delivery data:
 
-* validated before reaching analytical models
-* monitored for quality failures
-* quarantined when records cannot be safely processed
-* remediated when deterministic corrections are possible
-* transformed into consistent business metrics
-* exposed through trusted BI dashboards
-* made accessible to business users without requiring SQL expertise
+**Raw Data → Staging → Quality Validation → Quarantine → Remediation → Analytics → Canonical Metrics → BI → AI Analytics**
 
-This project implements that workflow as a production-style analytics engineering platform.
+The platform combines deterministic data engineering controls with an LLM-powered analytics interface. The AI assistant does not directly trust generated SQL; queries are constrained by approved metrics and dimensions, validated before execution, and logged for auditability.
 
-## System Architecture
+---
 
-<img width="336" height="821" alt="Platform_architecture" src="https://github.com/user-attachments/assets/82cccd4f-7e87-4ca9-b097-dc4645240f01" />
+## What This Project Demonstrates
+
+### Analytics Engineering
+
+* Layered data modeling with dbt
+* Reusable analytical models
+* Canonical metric definitions
+* SQL-based transformations
+* BI-ready datasets
+
+### Data Quality & Governance
+
+* Record-level validation
+* Duplicate detection
+* Failure classification
+* Quarantine of invalid records
+* Deterministic remediation
+* Revalidation
+* Pipeline auditability
+
+### Orchestration
+
+* Apache Airflow pipeline orchestration
+* Scheduled dbt execution
+* Pipeline run tracking
+* Success / quarantine-aware completion status
+
+### Business Intelligence
+
+* Power BI operational reporting
+* Executive KPI monitoring
+* Data-quality monitoring
+* Trend analysis
+
+### AI-Assisted Analytics
+
+* Natural-language business questions
+* Groq Cloud LLM
+* Governed SQL generation
+* SQLGlot validation
+* Read-only query execution
+* Result explanation
+* AI request auditing
+
+---
+
+# Architecture
 
 ```text
-Raw Data
-   |
-   v
-Staging Models
-   |
-   v
-Data Quality Validation
-   |
-   +--------------------+
-   |                    |
-   v                    v
-Clean Records       Failed Records
-   |                    |
-   v                    v
-Analytics Models    Quarantine
-   |                    |
-   v                    v
-Canonical Metrics   Remediation
-   |                    |
-   +----------+---------+
-              |
-              v
-          Power BI
-              |
-              v
-      AI Analytics Assistant
-              |
-              v
-          Groq Cloud
-              |
-              v
-       SQL Generation
-              |
-              v
-       SQL Validation
-              |
-              v
-      Read-Only Execution
-              |
-              v
-        Result Explanation
-              |
-              v
-          Audit Log
+                         ┌──────────────────────┐
+                         │     Raw Data         │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │      dbt Staging     │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Quality Validation │
+                         └──────────┬───────────┘
+                                    │
+                       ┌────────────┴────────────┐
+                       │                         │
+                       ▼                         ▼
+                ┌─────────────┐          ┌──────────────┐
+                │ Clean Data  │          │ Failed Data  │
+                └──────┬──────┘          └──────┬───────┘
+                       │                        │
+                       │                        ▼
+                       │                 ┌──────────────┐
+                       │                 │  Quarantine  │
+                       │                 └──────┬───────┘
+                       │                        │
+                       │                        ▼
+                       │                 ┌──────────────┐
+                       │                 │ Remediation  │
+                       │                 └──────┬───────┘
+                       │                        │
+                       │                        ▼
+                       │                 ┌──────────────┐
+                       │                 │ Revalidation │
+                       │                 └──────┬───────┘
+                       │                        │
+                       └────────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │  Analytics Models    │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ Canonical Metrics    │
+                         └──────────┬───────────┘
+                                    │
+                         ┌──────────┴───────────┐
+                         ▼                      ▼
+                  ┌─────────────┐       ┌─────────────────┐
+                  │   Power BI  │       │ AI Analytics    │
+                  │  Dashboard  │       │    Assistant    │
+                  └─────────────┘       └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │   Groq Cloud    │
+                                        │       LLM       │
+                                        └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │ SQL Generation   │
+                                        └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │ SQLGlot         │
+                                        │ Validation      │
+                                        └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │ Read-only Query │
+                                        └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │ Result          │
+                                        │ Explanation     │
+                                        └────────┬────────┘
+                                                 │
+                                                 ▼
+                                        ┌─────────────────┐
+                                        │ Audit Logging   │
+                                        └─────────────────┘
 ```
 
+---
 
-## Key Capabilities
+# Data Pipeline
 
-### 1. Data Quality Pipeline
+## 1. Raw Layer
 
-The analytics pipeline validates operational trip data before it reaches analytical models.
+Operational trip records are entered into the raw layer with source metadata and ingestion timestamps.
 
-Validation rules include:
+The raw data includes attributes such as:
 
-* missing trip identifiers
-* duplicate trip identifiers
-* missing vehicle identifiers
+* trip ID
+* vehicle ID
+* start and completion timestamps
+* distance
+* duration
+* delivery status
+* fare
+* source file
+
+## 2. Staging Layer
+
+dbt staging models standardize source fields and normalize values before downstream processing.
+
+Example:
+
+```text
+delivery_status
+       ↓
+lowercase + trim
+       ↓
+standardized status
+```
+
+## 3. Data Quality Layer
+
+Records are evaluated against deterministic validation rules.
+
+Current quality checks include:
+
+* missing trip ID
+* duplicate trip ID
+* missing vehicle ID
 * negative distance
 * negative fare
 * invalid duration
-* invalid timestamp sequences
-* invalid delivery statuses
+* invalid timestamp sequence
+* invalid delivery status
 
-Records that fail validation are separated from the clean analytical dataset.
+Each validation result is associated with pipeline metadata and a record hash for traceability.
 
-### 2. Quarantine and Remediation
+## 4. Quarantine
 
-The platform distinguishes between:
+Records that fail validation are separated from clean analytical data.
 
-**Automatically correctable issues**
+The quarantine layer preserves information such as:
 
-Examples include:
+* failure key
+* pipeline run ID
+* record hash
+* trip ID
+* vehicle ID
+* failure reason
+* remediation status
+* detection timestamp
 
-* whitespace normalization
-* case normalization
-* deterministic status corrections such as `completeed` → `completed`
+This prevents invalid records from silently contaminating analytical metrics.
 
-**Issues requiring investigation**
+## 5. Remediation
 
-Examples include:
+Only deterministic and low-risk corrections are automatically remediated.
 
-* negative distance
-* negative fare
-* missing vehicle
-* impossible timestamps
-* duplicate records
+Examples:
 
-Remediation activity is logged so that corrections remain traceable.
+```text
+completeed → completed
+" Completed " → "completed"
+```
 
-### 3. Canonical Metrics
+Issues such as negative fare, negative distance, missing vehicle IDs, impossible timestamps, and duplicates are not automatically altered.
 
-The platform defines reusable analytical metrics rather than allowing every dashboard or analyst to calculate business logic independently.
+This separates **safe deterministic remediation** from issues requiring investigation.
 
-Examples include:
+## 6. Analytics Layer
+
+Only records that pass validation are included in the primary analytical models.
+
+The project includes analytical facts and metric models designed for BI consumption.
+
+---
+
+# Canonical Metrics
+
+A core design principle is to centralize business logic in reusable metric definitions rather than allowing every dashboard or analyst to recalculate metrics independently.
+
+Current canonical metrics include:
+
+| Metric               | Definition                              |
+| -------------------- | --------------------------------------- |
+| Total Trips          | Count of valid analytical trip records  |
+| Completed Trips      | Trips with completed delivery status    |
+| Canceled Trips       | Trips with canceled delivery status     |
+| In-Progress Trips    | Trips currently in progress             |
+| Completion Rate      | Completed trips divided by total trips  |
+| Average Duration     | Average trip duration in seconds        |
+| Average Distance     | Average trip distance in miles          |
+| Total Distance       | Total valid trip distance               |
+| Total Revenue        | Revenue from valid analytical trips     |
+| Revenue per Mile     | Total revenue divided by total distance |
+| Active Vehicles      | Number of active vehicles               |
+| Quality Failure Rate | Failed records divided by raw records   |
+
+Full metric definitions are documented in:
+
+`docs/canonical_metrics.md`
+
+---
+
+# Airflow Orchestration
+
+Apache Airflow orchestrates the end-to-end analytical pipeline.
+
+The DAG:
+
+`orchestration/airflow_dag.py`
+
+coordinates:
+
+1. Pipeline run initialization
+2. dbt model execution
+3. Data-quality processing
+4. Analytical model creation
+5. Pipeline completion auditing
+
+The DAG is designed to be portable across environments and does not depend on a developer-specific filesystem path.
+
+The local Airflow runtime is intentionally kept outside the Git repository.
+
+---
+
+# Power BI
+
+The Power BI layer provides an operations and data-quality dashboard.
+
+![Power BI Dashboard](screenshots/PowerBI_dashboard.png)
+
+Additional dashboard view:
+
+![Power BI Dashboard 2](screenshots/PowerBi_dashboard2.png)
+
+The report includes:
 
 * Total Trips
-* Completed Trips
-* Cancelled Trips
 * Completion Rate
-* Average Duration
-* Average Distance
-* Total Distance
 * Total Revenue
-* Revenue per Mile
 * Active Vehicles
-* Quality Failure Rate
+* Daily trip trends
+* Completion-rate trends
+* Revenue trends
+* Quality failure rate
+* Failed-record counts
+* Failure reasons
+* Pipeline quality status
+* Remediation information
 
-Metric definitions are maintained as governed analytical metadata.
+The goal is to provide both an operational view and a data-reliability view from the same governed analytical layer.
 
-### 4. BI Reporting
+---
 
-Power BI provides an operations and data-quality view containing:
+# AI Analytics Assistant
 
-* total trips
-* completion rate
-* revenue
-* active vehicles
-* daily trip trends
-* completion-rate trends
-* revenue trends
-* quality failure rate
-* failed-record counts
-* failure reasons
-* remediation information
-* pipeline execution status
+The AI assistant allows business users to ask analytical questions without writing SQL.
 
-<img width="1071" height="620" alt="PowerBI_dashboard" src="https://github.com/user-attachments/assets/66d1c517-70d0-4407-90c4-8debf256b1c0" />
+Example:
 
-<img width="1091" height="687" alt="PowerBi_dashboard2" src="https://github.com/user-attachments/assets/2a382adb-61e8-4690-8a01-a33977fd42e8" />
+```text
+What were the total trips on 2026-09-17?
+```
 
-### 5. AI Analytics Assistant
-
-Users can ask questions in natural language, for example:
-
-> What were total trips on September 17?
-
-The assistant performs:
+The application follows this workflow:
 
 ```text
 Natural Language Question
-        ↓
+          ↓
 Canonical Metric Context
-        ↓
-Groq LLM
-        ↓
+          ↓
+Groq Cloud LLM
+          ↓
 SQL Generation
-        ↓
-SQL Validation
-        ↓
-Read-Only Execution
-        ↓
+          ↓
+SQLGlot Validation
+          ↓
+Read-only Query Execution
+          ↓
 Query Result
-        ↓
+          ↓
 Business Explanation
+          ↓
+Audit Log
 ```
 
-<img width="820" height="696" alt="digital_assistant_demo" src="https://github.com/user-attachments/assets/7b7e494e-b542-4fa1-8f55-615790384798" />
+![AI Analytics Assistant](screenshots/digital_assistant_demo.png)
 
-The assistant is constrained to approved canonical metrics and dimensions.
+## Why the AI layer is governed
 
-### 6. SQL Safety
+The assistant is constrained to approved analytical definitions.
 
-Generated SQL is validated before execution.
+It is designed to:
 
-The validation layer checks for:
+* Use canonical metrics where possible
+* avoid inventing tables or columns
+* generate read-only queries
+* reject forbidden SQL operations
+* validate generated SQL before execution
+* explain results using only the returned data
+* log AI requests for traceability
 
-* single-statement execution
+The LLM is therefore an interface to the analytical layer, **not the source of truth**.
+
+---
+
+# SQL Safety Layer
+
+Generated SQL passes through a dedicated validation layer before execution.
+
+The validator checks for:
+
+* single SQL statement
 * read-only query behavior
 * approved tables
 * approved columns
 * forbidden SQL operations
-* SQL parameter placeholders
-* unauthorized data access patterns
+* unsupported parameter placeholders
+* unauthorized data access
 
-The application does not directly execute arbitrary LLM-generated SQL.
+This adds a control boundary between the LLM and the database.
 
-### 7. Query Auditability
+---
 
-AI requests are recorded in an audit table containing information such as:
+# Auditability
+
+The AI assistant records query execution metadata in an audit table.
+
+Captured information includes:
 
 * request ID
 * original question
@@ -219,164 +411,249 @@ AI requests are recorded in an audit table containing information such as:
 * generated answer
 * model
 * database dialect
-* timestamp
+* creation timestamp
 
-This provides traceability for AI-assisted analytics requests.
+This allows an analytics request to be traced from the original question through SQL generation and execution to the final business response.
 
-## Technology Stack
+---
 
-* Python
-* SQL
-* dbt
-* Apache Airflow
-* SQLite
-* Snowflake connector
-* Power BI
-* Groq Cloud
-* SQLGlot
+# Database Architecture
 
-## Database Architecture
-
-The analytical warehouse is organized around the following logical layers:
+The project separates the application from its database implementation through a database adapter.
 
 ```text
-RAW
-  ↓
-STAGING
-  ↓
-QUALITY
-  ↓
-ANALYTICS
-```
-
-Key analytical objects include:
-
-* `RAW_TRIPS`
-* `DQ_FAILED_RECORDS`
-* `DQ_REMEDIATION_LOG`
-* `FCT_TRIPS`
-* `FCT_TRIP_METRICS`
-* `DATA_QUALITY_METRICS`
-* `PIPELINE_RUN_AUDIT`
-
-## Runtime Architecture
-
-The project supports a local SQLite runtime for reproducible development and demonstration.
-
-A Snowflake database adapter is included for cloud warehouse execution.
-
-This separation keeps the application architecture independent of a single database implementation.
-
-```text
-Application
-    |
-    v
+AI Assistant
+     │
+     ▼
 Database Adapter
-    |
-    +------ SQLite
-    |
-    +------ Snowflake
+     │
+     ├──────────────► SQLite
+     │                  │
+     │                  └── Reproducible local demo
+     │
+     └──────────────► Snowflake
+                        │
+                        └── Cloud warehouse target
 ```
 
-## Example Questions
+The repository includes a Snowflake setup script and Snowflake connector implementation while using SQLite as the reproducible local demo runtime.
 
-The AI assistant can answer questions such as:
+This allows the application architecture to remain database-independent.
 
-```text
-What were total trips on 2026-09-17?
+---
 
-What was the completion rate on 2026-09-18?
+# Technology Stack
 
-Which day had the highest total revenue?
+| Category                 | Technology     |
+| ------------------------ | -------------- |
+| Programming              | Python         |
+| Querying                 | SQL            |
+| Transformation           | dbt            |
+| Orchestration            | Apache Airflow |
+| Local Analytics Runtime  | SQLite         |
+| Cloud Warehouse Adapter  | Snowflake      |
+| BI                       | Power BI       |
+| LLM                      | Groq Cloud     |
+| SQL Parsing / Validation | SQLGlot        |
+| Testing                  | pytest         |
+| CI                       | GitHub Actions |
 
-Show total trips and completion rate by trip date.
-```
+---
 
-## Engineering Principles Demonstrated
-
-This project focuses on several analytics engineering principles:
-
-* trusted canonical metrics
-* data-quality-first modeling
-* separation of raw, quality, and analytical layers
-* deterministic remediation
-* auditability
-* reusable metric definitions
-* controlled AI-generated SQL
-* read-only analytical execution
-* database abstraction
-* BI-ready analytical models
-* reproducible local development
-
-## Project Structure
+# Repository Structure
 
 ```text
 data-quality-canonical-metrics-platform/
 │
-├── airflow/
-│   └── dags/
-│
-├── dbt/
-│   ├── models/
-│   │   ├── staging/
-│   │   ├── quality/
-│   │   └── analytics/
-│   ├── tests/
-│   └── dbt_project.yml
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── ai_assistant/
 │   ├── app.py
+│   ├── explainer.py
+│   ├── prompts.py
+│   ├── schema_context.py
 │   ├── sql_generator.py
 │   ├── sql_validator.py
-│   ├── schema_context.py
-│   ├── prompts.py
-│   ├── explainer.py
 │   └── database/
-│       ├── local.py
-│       ├── setup_local.py
 │       ├── adapter.py
 │       ├── audit.py
+│       ├── local.py
+│       ├── setup_local.py
 │       └── snowflake.py
 │
-├── docs/
-│   └── canonical_metrics.md
+├── dbt/
+│   ├── dbt_project.yml
+│   ├── macros/
+│   └── models/
+│       ├── staging/
+│       ├── quality/
+│       └── marts/
 │
+├── docs/
+│   ├── canonical_metrics.md
+│   └── requirements.md
+│
+├── ingestion/
+│   └── generate_bad_data.py
+│
+├── orchestration/
+│   └── airflow_dag.py
+│
+├── screenshots/
+│   ├── Platform_architecture.png
+│   ├── PowerBI_dashboard.png
+│   ├── PowerBi_dashboard2.png
+│   └── digital_assistant_demo.png
+│
+├── seeds/
+│   └── raw_trips.csv
+│
+├── snowflake/
+│   └── 01_setup.sql
+│
+├── tests/
+│   └── test_generate_bad_data.py
+│
+├── .env.example
+├── .gitignore
+├── LICENSE
 ├── README.md
-├── requirements.txt
-└── .gitignore
+├── pytest.ini
+└── requirements.txt
 ```
 
-## Running the AI Assistant
+---
 
-Create the environment configuration locally:
+# Local Demo Setup
 
-```text
-GROQ_API_KEY=<your key>
+The AI assistant can be run locally without requiring a live Snowflake session.
+
+## 1. Configure environment variables
+
+Create a local `.env` file:
+
+```env
+GROQ_API_KEY=your_groq_api_key
 DATABASE_DIALECT=sqlite
 ```
 
-Do not commit credentials or `.env` files.
+The repository includes `.env.example` as a template.
 
-Initialize the local analytical database:
+**Never commit `.env` or credentials to GitHub.**
+
+## 2. Initialize the local analytics database
 
 ```bash
 python ai_assistant/database/setup_local.py
 ```
 
-Run the assistant:
+## 3. Run the AI Analytics Assistant
 
 ```bash
 python -m ai_assistant.app
 ```
 
-The assistant will generate SQL, validate the query, execute it against the analytical dataset, explain the result, and record the request in the audit log.
+## 4. Example questions
 
-## Portfolio Focus
+```text
+What were the total trips on 2026-09-17?
+```
 
-This project demonstrates the intersection of:
+```text
+What was the completion rate on 2026-09-18?
+```
 
-**Analytics Engineering + Data Quality + BI + AI-assisted Analytics**
+```text
+Which day had the highest total revenue?
+```
 
-The architecture is intentionally designed around governed analytical data rather than treating the LLM as the source of truth.
+```text
+Show total trips and completion rate by trip date.
+```
 
-The LLM generates and explains queries, while canonical metric definitions, SQL validation, and the analytical data layer provide the control framework.
+---
+
+# Testing
+
+Run the project tests with:
+
+```bash
+pytest
+```
+
+Python syntax checks can also be performed with:
+
+```bash
+python -m py_compile ai_assistant/app.py
+python -m py_compile ai_assistant/sql_generator.py
+python -m py_compile ai_assistant/sql_validator.py
+python -m py_compile orchestration/airflow_dag.py
+```
+
+The repository also includes a GitHub Actions CI workflow.
+
+---
+
+# Security
+
+The project follows basic secret-management practices:
+
+* API credentials are loaded from environment variables
+* Snowflake credentials are not hard-coded
+* `.env` files are ignored by Git
+* Private Snowflake keys are excluded from Git
+* Local database files are excluded from Git
+* LLM-generated SQL is validated before execution
+* The analytics assistant is designed for read-only access
+
+The public repository intentionally contains configuration templates rather than credentials.
+
+---
+
+# Key Engineering Decisions
+
+### Canonical metrics instead of duplicated business logic
+
+Metric definitions are centralized so analytical users and dashboards reference consistent calculations.
+
+### Quarantine instead of silently dropping bad records
+
+Failed records are retained with failure reasons so data-quality issues remain observable and traceable.
+
+### Deterministic remediation
+
+Only low-risk, explicitly defined corrections are automated.
+
+### Validation before execution
+
+The LLM generates candidate SQL, but a dedicated validator controls what can reach the database.
+
+### Database adapter
+
+The application separates database execution from the rest of the assistant, allowing local development and cloud deployment to use different implementations.
+
+### Reproducible local runtime
+
+SQLite provides a simple local demonstration environment that does not require a cloud account to run the AI assistant.
+
+---
+
+# Portfolio Takeaway
+
+This project demonstrates how analytics engineering can connect:
+
+**Data Quality + Data Modeling + Orchestration + Canonical Metrics + BI + AI-assisted Analytics**
+
+The central design principle is simple:
+
+> **Trusted data and governed metrics come first; AI sits on top of that foundation.**
+
+This makes the platform useful not only as an AI demonstration but as an end-to-end analytics engineering project focused on reliability, consistency, and controlled access to analytical data.
+
+---
+
+## License
+
+This project is licensed under the terms provided in the repository's `LICENSE` file.
