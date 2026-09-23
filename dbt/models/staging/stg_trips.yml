@@ -1,0 +1,14 @@
+version: 2
+models:
+  - name: stg_trips
+    columns:
+      - name: trip_id
+        tests:
+          - not_null
+      - name: delivery_status
+        tests:
+          - accepted_values:
+              config:
+                severity: warn
+              arguments:
+                values: ['completed', 'cancelled', 'in_progress']

@@ -1,0 +1,21 @@
+name: data_quality_metrics
+version: '1.0.0'
+config-version: 2
+profile: dq_analytics
+model-paths: [models]
+test-paths: [tests]
+macro-paths: [macros]
+seed-paths: [../seeds]
+clean-targets: [target, dbt_packages]
+
+models:
+  data_quality_metrics:
+    staging:
+      +schema: STAGING
+      +materialized: view
+    quality:
+      +schema: QUALITY
+    marts:
+      +schema: ANALYTICS
+      +materialized: table
+

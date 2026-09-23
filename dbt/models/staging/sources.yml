@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE', target.database) }}"
+    schema: RAW
+    tables:
+      - name: raw_trips
+        description: "Raw trips ingested with synthetic intentional defects."
+        columns:
+          - name: trip_id
+            tests:
+              - not_null
+
+  - name: quality
+    database: "{{ env_var('SNOWFLAKE_DATABASE', target.database) }}"
+    schema: QUALITY
+    tables:
+      - name: pipeline_run_audit
+        description: "Pipeline run audit log tracking counts and status per run."
+

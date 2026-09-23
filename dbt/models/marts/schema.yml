@@ -1,0 +1,31 @@
+models:
+
+  - name: fct_trip_metrics
+    description: "Canonical daily mobility and delivery metrics."
+
+    columns:
+      - name: trip_date
+        tests:
+          - not_null
+          - unique
+
+      - name: total_trips
+        tests:
+          - not_null
+
+      - name: completion_rate
+        tests:
+          - not_null
+
+  - name: data_quality_metrics
+    description: "Canonical pipeline data-quality metrics."
+
+    columns:
+      - name: pipeline_date
+        tests:
+          - not_null
+          - unique
+
+      - name: quality_failure_rate
+        tests:
+          - not_null
